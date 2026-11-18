@@ -1,0 +1,1114 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>維特魯威人的方與圓</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600&family=Noto+Serif+TC:wght@600&display=swap">
+<style>
+/* Layout: a drafting table. The drawing fills the stage, tools run along its top, and one step card sits beside it (below it on phones). */
+:root {
+  --bg: #e9edf1;
+  --panel: #fbfcfd;
+  --fg: #1a232c;
+  --muted: #566370;
+  --line: #c6cfd8;
+  --accent: #174f8f;
+  --accent-fg: #ffffff;
+  --accent-soft: #dbe7f4;
+  --good: #1c7443;
+  --good-soft: #dcf0e3;
+  --warn: #a8480f;
+  --warn-soft: #f8e7da;
+  --stage: #2a2f33;
+  /* Ink drawn on the sepia sheet stays the same in both themes because the sheet does. */
+  --draw-blue: #0a4ea3;
+  --draw-red: #c20f4a;
+  --draw-teal: #006d6f;
+  --draw-dark: #14181c;
+  --draw-gold: #e08a00;
+  --draw-halo: #fff8e8;
+  --sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171c; --panel: #1b2229; --fg: #e7edf2; --muted: #9dabb7; --line: #36414c;
+    --accent: #7db4ee; --accent-fg: #0d1a27; --accent-soft: #223449;
+    --good: #7fd6a0; --good-soft: #1b3527; --warn: #f1a673; --warn-soft: #3b2619;
+    --stage: #0b0e11; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12171c; --panel: #1b2229; --fg: #e7edf2; --muted: #9dabb7; --line: #36414c;
+  --accent: #7db4ee; --accent-fg: #0d1a27; --accent-soft: #223449;
+  --good: #7fd6a0; --good-soft: #1b3527; --warn: #f1a673; --warn-soft: #3b2619;
+  --stage: #0b0e11; color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.6; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app {
+  height: 100%; display: grid; gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 372px;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "tools panel" "stage panel";
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+  padding-block: 10px;
+}
+
+.tools { grid-area: tools; display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+.tool {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 4px 10px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px; white-space: nowrap;
+}
+.tool:hover { border-color: var(--accent); }
+.tool[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.tool svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.tool svg .dot { fill: currentColor; stroke: none; }
+.tool:disabled { opacity: .45; cursor: default; border-color: var(--line); }
+.sep { width: 1px; background: var(--line); margin-inline: 4px; }
+.tool.confirm { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+
+.stage { grid-area: stage; position: relative; min-height: 0; background: var(--stage); border-radius: 8px; overflow: hidden; }
+#board { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; }
+#board.move { cursor: grab; }
+#board.drag { cursor: grabbing; }
+#prompt {
+  position: absolute; left: 8px; top: 8px; width: fit-content; max-width: calc(100% - 16px);
+  padding: 4px 10px; border-radius: 6px; font-size: 14px; pointer-events: none;
+  background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+}
+#prompt.alert { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
+.zoom { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; }
+.zoom button {
+  width: 40px; height: 40px; display: grid; place-items: center; padding: 0;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+}
+.zoom svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.panel {
+  grid-area: panel; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  min-width: 42px; min-height: 32px; padding: 1px 7px; font-size: 13px;
+  background: transparent; border: 1px solid var(--line); border-radius: 5px; color: var(--muted);
+}
+.chip.done { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+.chip.now { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.chip:disabled { opacity: .5; cursor: default; }
+.eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .06em; color: var(--accent); margin: 0; }
+h1 { font-family: var(--serif); font-size: 1.25rem; line-height: 1.5; font-weight: 600; margin: 2px 0 0; text-wrap: balance; }
+.card { display: grid; gap: 12px; }
+.card p { margin: 0; }
+details { font-size: 14px; color: var(--muted); }
+summary { cursor: pointer; }
+details p { margin-top: 4px; }
+.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 8px; }
+.option { min-height: 44px; padding: 6px 8px; background: transparent; border: 1px solid var(--muted); border-radius: 6px; }
+.option:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.option:disabled { cursor: default; opacity: .65; }
+.option.picked { opacity: 1; border-width: 2px; border-color: var(--accent); font-weight: 600; }
+.option.right { opacity: 1; border-color: var(--good); background: var(--good-soft); color: var(--good); font-weight: 600; }
+.option.wrong { opacity: 1; border-color: var(--warn); background: var(--warn-soft); color: var(--warn); }
+#live { display: grid; gap: 10px; }
+#live:empty { display: none; }
+.status { padding: 8px 10px; border-radius: 6px; background: var(--accent-soft); font-size: 14px; }
+.status.ok { background: var(--good-soft); color: var(--good); }
+.status.no { background: var(--warn-soft); color: var(--warn); }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+th, td { padding: 5px 4px; border-bottom: 1px solid var(--line); text-align: right; font-weight: 400; }
+th:first-child, td:first-child { text-align: left; }
+thead th { color: var(--muted); font-size: 13px; }
+tr.total td { font-weight: 600; border-bottom: 0; }
+.note { font-size: 13px; color: var(--muted); }
+.formula { font-size: 15px; }
+#next {
+  justify-self: start; min-height: 42px; padding: 6px 18px; font-weight: 600;
+  background: var(--accent); color: var(--accent-fg); border: 1px solid var(--accent); border-radius: 6px;
+}
+#next[hidden] { display: none; }
+.ghost-btn { justify-self: start; min-height: 40px; padding: 4px 14px; background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; }
+.slider { display: grid; gap: 4px; }
+.slider label { font-size: 14px; color: var(--muted); }
+.slider input { width: 100%; accent-color: var(--accent); min-height: 32px; }
+
+@media (max-width: 899px) {
+  html, body { height: auto; }
+  .app {
+    height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto;
+    grid-template-areas: "tools" "stage" "panel";
+    padding-left: max(8px, env(safe-area-inset-left, 0px));
+    padding-right: max(8px, env(safe-area-inset-right, 0px));
+  }
+  .tools { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+  .tool { justify-content: center; padding: 2px; font-size: 13px; min-height: 38px; white-space: normal; line-height: 1.2; text-align: center; }
+  .tool svg, .sep { display: none; }
+  .stage { height: min(112vw, 60dvh); min-height: 300px; }
+  #prompt { font-size: 13px; padding: 2px 8px; }
+  .panel { overflow: visible; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tool, .option, .chip { transition: background-color .12s, border-color .12s; }
+}
+</style>
+
+<div class="app">
+  <div class="tools" id="tools" role="toolbar" aria-label="繪圖工具"></div>
+
+  <div class="stage">
+    <svg id="board" class="move" aria-label="達文西維特魯威人手稿與你的作圖"></svg>
+    <div id="prompt" role="status"></div>
+    <div class="zoom">
+      <button type="button" id="zoomIn" aria-label="放大" title="放大"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button type="button" id="zoomOut" aria-label="縮小" title="縮小"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+      <button type="button" id="zoomFit" aria-label="回到全圖" title="回到全圖"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <div class="chips" id="chips"></div>
+    <div class="card">
+      <div id="cardHead"></div>
+      <div id="cardBody" class="card"></div>
+      <div id="live"></div>
+      <button type="button" id="next">下一步</button>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var NS = 'http://www.w3.org/2000/svg';
+  var board = $('board');
+
+  // World units: the sheet is 1000 wide. These were measured against the drawing.
+  var SHEET = { w: 1000, h: 1359.4 };
+  var TARGET = {
+    corners: [[146, 292], [853, 292], [853, 994], [146, 994]],
+    circle: { x: 499, y: 568, r: 429 },
+    headY: 292, feetY: 994, axisX: 499
+  };
+  // The circle and end-point limits are tight on purpose: the navel sits about 8 units from the point where question 5 flips.
+  var TOL = { corner: 16, centerExact: 2, centerNear: 16, circleC: 7, circleR: 8, axis: 14, onAxis: 3, end: 10 };
+  var HOME = { x0: 40, x1: 960, y0: 110, y1: 1040 };
+
+  var TOOLS = [
+    { id: 'move', label: '移動', tip: '拖動點或平移畫面', icon: '<path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>' },
+    { id: 'point', label: '點', tip: '點', icon: '<circle class="dot" cx="12" cy="12" r="4"/>' },
+    { id: 'seg', label: '線段', tip: '線段（挑選兩端點）', icon: '<path d="M5 19L19 5"/><circle class="dot" cx="5" cy="19" r="2.6"/><circle class="dot" cx="19" cy="5" r="2.6"/>' },
+    { id: 'line', label: '直線', tip: '直線（挑選兩點）', icon: '<path d="M2 22L22 2"/><circle class="dot" cx="8" cy="16" r="2.6"/><circle class="dot" cx="16" cy="8" r="2.6"/>' },
+    { id: 'mid', label: '線段中點', tip: '線段中點', icon: '<path d="M3 12h18"/><circle class="dot" cx="12" cy="12" r="3"/>' },
+    { id: 'bis', label: '線段中垂線', tip: '線段中垂線', icon: '<path d="M3 16h18M12 3v18"/>' },
+    { id: 'inter', label: '兩線交點', tip: '兩線交點', icon: '<path d="M4 20L20 4M4 4l16 16"/><circle class="dot" cx="12" cy="12" r="3"/>' },
+    { id: 'square', label: '正方形', tip: '正方形（挑選相鄰兩頂點）', icon: '<rect x="5" y="5" width="14" height="14"/>' },
+    { id: 'circle', label: '圓', tip: '圓（挑選圓心與圓上一點）', icon: '<circle cx="12" cy="12" r="8"/><circle class="dot" cx="12" cy="12" r="2"/>' }
+  ];
+  var PROMPTS = {
+    move: ['拖動藍點微調；拖動空白處平移'],
+    point: ['點一下放置一個點。靠近直線時，點會落在線上。'],
+    seg: ['線段：挑選第一個端點', '線段：挑選第二個端點'],
+    line: ['直線：挑選第一個點', '直線：挑選第二個點'],
+    mid: ['線段中點：點選一條線段，或依序點兩個點', '線段中點：再點第二個點'],
+    bis: ['線段中垂線：點選一條線段，或依序點兩個點', '線段中垂線：再點第二個點'],
+    inter: ['兩線交點：點選第一條線，或直接點在兩線相交處', '兩線交點：點選第二條線'],
+    square: ['正方形：挑選第一個頂點', '正方形：挑選相鄰的頂點'],
+    circle: ['圓：挑選圓心', '圓：挑選圓上一點']
+  };
+
+  // ---------- State ----------
+  var S = {
+    objs: [], nextId: 1, labelN: 0, bind: {}, ans: {},
+    step: 0, maxStep: 0, chalT: null, chalReveal: false
+  };
+  var tool = 'move', pending = [], selected = null, hover = null, hoverKey = '';
+  var undoStack = [], G = {}, alertTimer = null, alertMsg = '';
+  var view = { cx: 500, cy: 575, upp: 1 }, W = 1, H = 1;
+  var STORE = 'vitruve-construction-v1';
+
+  function byId(id) { for (var i = 0; i < S.objs.length; i++) if (S.objs[i].id === id) return S.objs[i]; return null; }
+  function isPoint(o) { return o.t === 'point' || o.t === 'on' || o.t === 'mid' || o.t === 'vtx' || o.t === 'inter'; }
+  function isLine(o) { return o.t === 'seg' || o.t === 'line' || o.t === 'bis'; }
+  function isDraggable(o) { return o.t === 'point' || o.t === 'on'; }
+  function deps(o) {
+    switch (o.t) {
+      case 'on': return [o.l];
+      case 'mid': case 'vtx': case 'seg': case 'line': case 'bis': return [o.a, o.b];
+      case 'inter': return [o.l1, o.l2];
+      case 'square': return [o.a, o.b, o.c, o.d];
+      case 'circle': return [o.c, o.p];
+      default: return [];
+    }
+  }
+
+  function solve() {
+    G = {};
+    S.objs.forEach(function (o) {
+      var a, b, g = null;
+      switch (o.t) {
+        case 'point': g = { x: o.x, y: o.y }; break;
+        case 'on': a = G[o.l]; if (a) g = { x: a.x + o.k * a.dx, y: a.y + o.k * a.dy }; break;
+        case 'mid': a = G[o.a]; b = G[o.b]; if (a && b) g = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; break;
+        case 'vtx':
+          a = G[o.a]; b = G[o.b];
+          if (a && b) {
+            var rx = -(b.y - a.y), ry = b.x - a.x, base = o.i === 2 ? b : a;
+            g = { x: base.x + rx, y: base.y + ry };
+          }
+          break;
+        case 'inter': g = intersect(G[o.l1], G[o.l2]); break;
+        case 'seg': case 'line':
+          a = G[o.a]; b = G[o.b];
+          if (a && b && (a.x !== b.x || a.y !== b.y)) g = { x: a.x, y: a.y, dx: b.x - a.x, dy: b.y - a.y };
+          break;
+        case 'bis':
+          a = G[o.a]; b = G[o.b];
+          if (a && b && (a.x !== b.x || a.y !== b.y)) g = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, dx: -(b.y - a.y), dy: b.x - a.x };
+          break;
+        case 'square':
+          if (G[o.a] && G[o.b] && G[o.c] && G[o.d]) g = { pts: [G[o.a], G[o.b], G[o.c], G[o.d]], side: dist(G[o.a], G[o.b]) };
+          break;
+        case 'circle':
+          a = G[o.c]; b = G[o.p];
+          if (a && b) g = { x: a.x, y: a.y, r: dist(a, b) };
+          break;
+      }
+      G[o.id] = g;
+    });
+  }
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+  function intersect(l, m) {
+    if (!l || !m) return null;
+    var det = l.dx * m.dy - l.dy * m.dx;
+    var scale = Math.hypot(l.dx, l.dy) * Math.hypot(m.dx, m.dy);
+    if (!scale || Math.abs(det) / scale < 1e-6) return null;
+    var k = ((m.x - l.x) * m.dy - (m.y - l.y) * m.dx) / det;
+    return { x: l.x + k * l.dx, y: l.y + k * l.dy };
+  }
+  function distToLine(p, l) { return Math.abs((p.x - l.x) * l.dy - (p.y - l.y) * l.dx) / Math.hypot(l.dx, l.dy); }
+  function distToSeg(p, l) {
+    var k = ((p.x - l.x) * l.dx + (p.y - l.y) * l.dy) / (l.dx * l.dx + l.dy * l.dy);
+    k = Math.max(0, Math.min(1, k));
+    return Math.hypot(p.x - (l.x + k * l.dx), p.y - (l.y + k * l.dy));
+  }
+  function distToObj(p, o) { return o.t === 'seg' ? distToSeg(p, G[o.id]) : distToLine(p, G[o.id]); }
+
+  // ---------- Editing ----------
+  function snapshot() { return JSON.stringify({ objs: S.objs, nextId: S.nextId, labelN: S.labelN, bind: S.bind }); }
+  function pushUndo() { undoStack.push(snapshot()); if (undoStack.length > 100) undoStack.shift(); }
+  function undo() {
+    if (!undoStack.length) return;
+    var d = JSON.parse(undoStack.pop());
+    S.objs = d.objs; S.nextId = d.nextId; S.labelN = d.labelN; S.bind = d.bind;
+    pending = []; selected = null;
+    update();
+  }
+  function nextLabel() {
+    var n = S.labelN++, letter = String.fromCharCode(65 + n % 26), round = Math.floor(n / 26);
+    return round ? letter + round : letter;
+  }
+  function add(o) { o.id = S.nextId++; if (isPoint(o)) o.label = nextLabel(); S.objs.push(o); return o.id; }
+
+  function nearestPoint(p, r) {
+    var best = null, bd = r;
+    S.objs.forEach(function (o) {
+      if (!isPoint(o) || !G[o.id]) return;
+      var d = dist(p, G[o.id]);
+      if (d <= bd) { bd = d; best = o; }
+    });
+    return best;
+  }
+  function linesNear(p, r) {
+    var list = [];
+    S.objs.forEach(function (o) {
+      if (!isLine(o) || !G[o.id]) return;
+      var d = distToObj(p, o);
+      if (d <= r) list.push({ o: o, d: d });
+    });
+    return list.sort(function (x, y) { return x.d - y.d; }).map(function (x) { return x.o; });
+  }
+  // Infinite lines attract new points; segments and square edges do not, so fitting a corner stays free.
+  function snapLine(p, r) {
+    var near = linesNear(p, r).filter(function (o) { return o.t !== 'seg'; });
+    return near[0] || null;
+  }
+  function pointAt(p, r) {
+    var hit = nearestPoint(p, r);
+    if (hit) return hit.id;
+    pushUndo();
+    var l = snapLine(p, r * 0.8);
+    if (l) {
+      var g = G[l.id];
+      var k = ((p.x - g.x) * g.dx + (p.y - g.y) * g.dy) / (g.dx * g.dx + g.dy * g.dy);
+      var id = add({ t: 'on', l: l.id, k: k });
+      solve();
+      return id;
+    }
+    var fresh = add({ t: 'point', x: p.x, y: p.y });
+    solve();
+    return fresh;
+  }
+  function addTwoPointShape(a, b) {
+    pushUndo();
+    if (tool === 'seg') add({ t: 'seg', a: a, b: b });
+    else if (tool === 'line') add({ t: 'line', a: a, b: b });
+    else if (tool === 'mid') add({ t: 'mid', a: a, b: b });
+    else if (tool === 'bis') add({ t: 'bis', a: a, b: b });
+    else if (tool === 'circle') add({ t: 'circle', c: a, p: b });
+    else if (tool === 'square') {
+      var sq = S.nextId + 6;
+      var c = add({ t: 'vtx', a: a, b: b, i: 2, own: sq });
+      var d = add({ t: 'vtx', a: a, b: b, i: 3, own: sq });
+      add({ t: 'seg', a: a, b: b, own: sq });
+      add({ t: 'seg', a: b, b: c, own: sq });
+      add({ t: 'seg', a: c, b: d, own: sq });
+      add({ t: 'seg', a: d, b: a, own: sq });
+      add({ t: 'square', a: a, b: b, c: c, d: d });
+    }
+  }
+  function remove(id) {
+    var o = byId(id);
+    if (!o) return;
+    pushUndo();
+    var kill = {};
+    kill[o.own || id] = true;
+    S.objs.forEach(function (x) {
+      if (x.own && kill[x.own]) kill[x.id] = true;
+      if (deps(x).some(function (d) { return kill[d]; })) kill[x.id] = true;
+      if (x.own && kill[x.id]) kill[x.own] = true;
+    });
+    // A pass in creation order misses a square whose parts were removed after it was reached, so run once more.
+    S.objs.forEach(function (x) {
+      if (x.own && kill[x.own]) kill[x.id] = true;
+      if (deps(x).some(function (d) { return kill[d]; })) kill[x.id] = true;
+    });
+    S.objs = S.objs.filter(function (x) { return !kill[x.id]; });
+    selected = null;
+    update();
+  }
+
+  function flash(msg) {
+    alertMsg = msg;
+    clearTimeout(alertTimer);
+    alertTimer = setTimeout(function () { alertMsg = ''; renderPrompt(); }, 2600);
+    renderPrompt();
+  }
+
+  function clickAt(p, r) {
+    if (tool === 'move') {
+      var hit = nearestPoint(p, r) || linesNear(p, r)[0] || circleNear(p, r);
+      selected = hit ? hit.id : null;
+      update();
+      return;
+    }
+    if (tool === 'point') { pointAt(p, r); update(); return; }
+    if (tool === 'seg' || tool === 'line' || tool === 'square' || tool === 'circle') {
+      var id = pointAt(p, r);
+      if (pending.length && pending[0] === id) { flash('請挑選另一個不同的點。'); return; }
+      pending.push(id);
+      if (pending.length === 2) { addTwoPointShape(pending[0], pending[1]); pending = []; }
+      update();
+      return;
+    }
+    if (tool === 'mid' || tool === 'bis') {
+      var pt = nearestPoint(p, r);
+      if (pt) {
+        if (pending.length && pending[0] === pt.id) { flash('請挑選另一個不同的點。'); return; }
+        pending.push(pt.id);
+        if (pending.length === 2) { addTwoPointShape(pending[0], pending[1]); pending = []; }
+        update();
+        return;
+      }
+      if (pending.length) { flash('請點第二個點，或按 Esc 重選。'); return; }
+      var segs = linesNear(p, r).filter(function (o) { return o.t === 'seg'; });
+      if (!segs.length) { flash('這裡沒有線段。請點一條線段，或點已有的點。'); return; }
+      addTwoPointShape(segs[0].a, segs[0].b);
+      update();
+      return;
+    }
+    if (tool === 'inter') {
+      var near = linesNear(p, r);
+      if (!near.length) { flash('這裡沒有線。請點一條線。'); return; }
+      var first = pending[0];
+      var picks = first ? [first, (near.filter(function (o) { return o.id !== first; })[0] || {}).id] : near.length >= 2 ? [near[0].id, near[1].id] : [near[0].id];
+      if (first && !picks[1]) { flash('請點另一條線。'); return; }
+      if (picks.length === 1) { pending = picks; update(); return; }
+      if (!intersect(G[picks[0]], G[picks[1]])) { flash('這兩條線平行，沒有交點。'); pending = []; update(); return; }
+      pushUndo();
+      add({ t: 'inter', l1: picks[0], l2: picks[1] });
+      pending = [];
+      update();
+    }
+  }
+  function circleNear(p, r) {
+    var best = null;
+    S.objs.forEach(function (o) {
+      if (o.t === 'circle' && G[o.id] && Math.abs(dist(p, G[o.id]) - G[o.id].r) <= r) best = o;
+    });
+    return best;
+  }
+
+  // ---------- Steps ----------
+  var OPTIONS_BODY = ['頭頂', '肚臍', '會陰', '腳底'];
+  var STEPS = [
+    { id: 't1', chip: '任務1', kind: '任務 1', title: '建構一個正方形，擬合圖中的正方形',
+      hint: '用〔正方形〕先點圖中正方形的左上角，再點右上角。由左到右選，正方形會長在下方。之後拖動藍色的點微調。' },
+    { id: 't2', chip: '任務2', kind: '任務 2', title: '找出正方形的心',
+      hint: '正方形的心是兩條對角線的交點。可以先畫對角線，再用〔兩線交點〕；也可以取一條對角線的中點。' },
+    { id: 't3', chip: '任務3', kind: '任務 3', title: '建構一個圓，擬合圖中的圓形',
+      hint: '用〔圓〕先點你估計的圓心，再點圖中圓周上的一點。之後拖動這兩個點，讓圓和圖上的線重合。這一步要求比較精確，請放大畫面對齊圓周的上、下、左、右。' },
+    { id: 'q1', chip: '問題1', kind: '問題 1', title: '正方形的心大約在人體的哪個位置？', options: OPTIONS_BODY, right: '會陰' },
+    { id: 'q2', chip: '問題2', kind: '問題 2', title: '圓心大約在人體的哪個位置？', options: OPTIONS_BODY, right: '肚臍' },
+    { id: 'q3', chip: '問題3', kind: '問題 3', title: '猜猜看正方形與圓形的周長誰比較大？', options: ['正方形', '圓形', '一樣大'] },
+    { id: 'q4', chip: '問題4', kind: '問題 4', title: '猜猜看正方形與圓形的面積誰比較大？', options: ['正方形', '圓形', '一樣大'] },
+    { id: 't4', chip: '任務4', kind: '任務 4', title: '建構一直線通過人的對稱軸',
+      hint: '人站在正方形的正中央。找一條已有線段的中垂線，或用〔直線〕挑選對稱軸上的兩點。' },
+    { id: 't5', chip: '任務5', kind: '任務 5', title: '找出對稱軸的最高點（頭頂）與最低點（腳底）',
+      hint: '可以用〔兩線交點〕求對稱軸與正方形上邊、下邊的交點；也可以用〔點〕直接點在對稱軸上。' },
+    { id: 'q5', chip: '問題5', kind: '問題 5', title: '頭頂到肚臍的距離 a，肚臍到腳底的距離 b，身高 c。猜猜看 a 到 b 的放大比例與 b 到 c 的放大比例誰比較大？', options: ['a 到 b', 'b 到 c', '一樣大'] },
+    { id: 'ch', chip: '挑戰', kind: '挑戰', title: '如果希望兩次放大比例相等，肚臍的位置應該畫在哪裡？' }
+  ];
+  function stepIdx(id) { for (var i = 0; i < STEPS.length; i++) if (STEPS[i].id === id) return i; return -1; }
+  function reached(id) { return stepIdx(id) <= S.maxStep; }
+
+  function squareFit(o) {
+    var g = G[o.id];
+    if (!g) return Infinity;
+    var worst = 0;
+    TARGET.corners.forEach(function (c) {
+      var best = Infinity;
+      g.pts.forEach(function (p) { best = Math.min(best, Math.hypot(p.x - c[0], p.y - c[1])); });
+      worst = Math.max(worst, best);
+    });
+    return worst;
+  }
+  function circleFit(o) {
+    var g = G[o.id], T = TARGET.circle;
+    if (!g) return { c: Infinity, r: Infinity };
+    return { c: Math.hypot(g.x - T.x, g.y - T.y), r: Math.abs(g.r - T.r) };
+  }
+  function axisFit(o) {
+    var g = G[o.id];
+    if (!g || Math.abs(g.dy) < 1e-9) return Infinity;
+    var at = function (y) { return Math.abs(g.x + (y - g.y) * g.dx / g.dy - TARGET.axisX); };
+    return Math.max(at(TARGET.headY), at(TARGET.feetY));
+  }
+  function ofType(t) { return S.objs.filter(function (o) { return o.t === t; }); }
+  function squareCenter() {
+    var g = S.bind.square && G[S.bind.square];
+    if (!g) return null;
+    return { x: (g.pts[0].x + g.pts[2].x) / 2, y: (g.pts[0].y + g.pts[2].y) / 2 };
+  }
+
+  function checkTasks() {
+    Object.keys(S.bind).forEach(function (k) { if (!byId(S.bind[k]) || !G[S.bind[k]]) delete S.bind[k]; });
+    if (!S.bind.square && reached('t1')) {
+      ofType('square').forEach(function (o) { if (squareFit(o) <= TOL.corner) S.bind.square = o.id; });
+    }
+    var ctr = squareCenter();
+    if (!S.bind.center && reached('t2') && ctr) {
+      S.objs.forEach(function (o) {
+        if ((o.t === 'mid' || o.t === 'inter') && G[o.id] && dist(G[o.id], ctr) <= TOL.centerExact) S.bind.center = o.id;
+      });
+    }
+    if (!S.bind.circle && reached('t3')) {
+      ofType('circle').forEach(function (o) {
+        var f = circleFit(o);
+        if (f.c <= TOL.circleC && f.r <= TOL.circleR) S.bind.circle = o.id;
+      });
+    }
+    if (!S.bind.axis && reached('t4')) {
+      S.objs.forEach(function (o) {
+        if ((o.t === 'line' || o.t === 'bis') && G[o.id] && axisFit(o) <= TOL.axis) S.bind.axis = o.id;
+      });
+    }
+    var axis = S.bind.axis && G[S.bind.axis];
+    if (axis && reached('t5')) {
+      S.objs.forEach(function (o) {
+        if (!isPoint(o) || !G[o.id] || distToLine(G[o.id], axis) > TOL.onAxis) return;
+        if (!S.bind.head && Math.abs(G[o.id].y - TARGET.headY) <= TOL.end) S.bind.head = o.id;
+        if (!S.bind.feet && Math.abs(G[o.id].y - TARGET.feetY) <= TOL.end) S.bind.feet = o.id;
+      });
+    }
+  }
+  function stepDone(id) {
+    switch (id) {
+      case 't1': return !!S.bind.square;
+      case 't2': return !!S.bind.center;
+      case 't3': return !!S.bind.circle;
+      case 't4': return !!S.bind.axis;
+      case 't5': return !!(S.bind.head && S.bind.feet);
+      case 'q1': return S.ans.q1 === '會陰';
+      case 'q2': return S.ans.q2 === '肚臍';
+      case 'q3': case 'q4': case 'q5': return !!S.ans[id];
+      case 'ch': return !!S.chalReveal;
+    }
+    return false;
+  }
+
+  function fmt(n, d) { return n.toLocaleString('en-US', { maximumFractionDigits: d || 0, minimumFractionDigits: d || 0 }); }
+  function bodyMeasure(t) {
+    var h = S.bind.head && G[S.bind.head], f = S.bind.feet && G[S.bind.feet];
+    if (!h || !f) return null;
+    var c = dist(h, f);
+    if (t === undefined) {
+      var cc = S.bind.circle && G[S.bind.circle];
+      if (!cc) return null;
+      t = ((cc.x - h.x) * (f.x - h.x) + (cc.y - h.y) * (f.y - h.y)) / (c * c);
+    }
+    t = Math.max(0.01, Math.min(0.99, t));
+    return {
+      t: t, h: h, f: f, c: c, a: t * c, b: (1 - t) * c,
+      n: { x: h.x + t * (f.x - h.x), y: h.y + t * (f.y - h.y) }
+    };
+  }
+  function verdict(guess, big, label) {
+    var hit = guess === big;
+    return '<div class="status ' + (hit ? 'ok' : 'no') + '">你猜「' + guess + '」，' + (hit ? '猜對了。' : big === '一樣大' ? '實際上兩者一樣大。' : '實際上「' + big + '」比較大。') + '</div>';
+  }
+  function missing(msg) { return '<div class="status no">' + msg + '</div>'; }
+
+  function liveHtml(id) {
+    var sq = S.bind.square && G[S.bind.square], ci = S.bind.circle && G[S.bind.circle], m;
+    if (id === 't1') {
+      if (sq) return '<div class="status ok">正方形貼合了。邊長約 ' + fmt(sq.side) + ' 單位。</div>';
+      var sqs = ofType('square');
+      if (!sqs.length) return '<div class="status">還沒有正方形。</div>';
+      var worst = Math.min.apply(null, sqs.map(squareFit));
+      return '<div class="status">最遠的頂點離圖中的角還差 ' + fmt(worst) + ' 單位（要在 ' + TOL.corner + ' 以內）。拖動藍色的點調整；方向相反時，把兩個點對調重畫。</div>';
+    }
+    if (id === 't2') {
+      if (S.bind.center) return '<div class="status ok">找到了。點 ' + byId(S.bind.center).label + ' 就是正方形的心。</div>';
+      var ctr = squareCenter();
+      if (!ctr) return missing('需要任務 1 的正方形。');
+      var eyeballed = S.objs.some(function (o) { return (o.t === 'point' || o.t === 'on') && G[o.id] && dist(G[o.id], ctr) <= TOL.centerNear; });
+      return eyeballed ? '<div class="status">位置很接近，但這是目測的點。請用作圖工具求出來。</div>' : '<div class="status">用作圖工具求出這個點，完成後會自動確認。</div>';
+    }
+    if (id === 't3') {
+      if (ci) return '<div class="status ok">圓貼合了。半徑約 ' + fmt(ci.r) + ' 單位。</div>';
+      var cs = ofType('circle').filter(function (o) { return G[o.id]; });
+      if (!cs.length) return '<div class="status">還沒有圓。</div>';
+      var f = circleFit(cs[cs.length - 1]);
+      return '<div class="status">圓心還差 ' + fmt(f.c) + ' 單位（要在 ' + TOL.circleC + ' 以內），半徑還差 ' + fmt(f.r) + ' 單位（要在 ' + TOL.circleR + ' 以內）。</div>';
+    }
+    if (id === 'q1' || id === 'q2') {
+      var ans = S.ans[id];
+      if (!ans) return '';
+      if (id === 'q1') return ans === '會陰' ? '<div class="status ok">對。正方形的心大約落在會陰，身體在這裡上下對半分。</div>' : '<div class="status no">不是這裡。看看點 ' + (S.bind.center ? byId(S.bind.center).label : '') + ' 落在身體哪個位置，再選一次。</div>';
+      return ans === '肚臍' ? '<div class="status ok">對。圓心大約落在肚臍。</div>' : '<div class="status no">不是這裡。放大看看你的圓心落在身體哪個位置，再選一次。</div>';
+    }
+    if (id === 'q3') {
+      if (!S.ans.q3) return '';
+      if (!sq || !ci) return missing('需要任務 1 的正方形與任務 3 的圓。');
+      var ps = 4 * sq.side, pc = 2 * Math.PI * ci.r;
+      return verdict(S.ans.q3, ps > pc ? '正方形' : '圓形') +
+        '<table><thead><tr><th></th><th>算法</th><th>周長（單位）</th></tr></thead><tbody>' +
+        '<tr><td>正方形</td><td>4 × ' + fmt(sq.side, 1) + '</td><td>' + fmt(ps) + '</td></tr>' +
+        '<tr><td>圓形</td><td>2π × ' + fmt(ci.r, 1) + '</td><td>' + fmt(pc) + '</td></tr>' +
+        '<tr class="total"><td>方圓周長比值</td><td>方 ÷ 圓</td><td>' + fmt(ps / pc, 3) + '</td></tr></tbody></table>' +
+        '<p class="note">數值來自你畫的圖形，圖寬 = 1000 單位。</p>';
+    }
+    if (id === 'q4') {
+      if (!S.ans.q4) return '';
+      if (!sq || !ci) return missing('需要任務 1 的正方形與任務 3 的圓。');
+      var as = sq.side * sq.side, ac = Math.PI * ci.r * ci.r;
+      return verdict(S.ans.q4, as > ac ? '正方形' : '圓形') +
+        '<table><thead><tr><th></th><th>算法</th><th>面積（平方單位）</th></tr></thead><tbody>' +
+        '<tr><td>正方形</td><td>' + fmt(sq.side, 1) + '²</td><td>' + fmt(as) + '</td></tr>' +
+        '<tr><td>圓形</td><td>π × ' + fmt(ci.r, 1) + '²</td><td>' + fmt(ac) + '</td></tr>' +
+        '<tr class="total"><td>方圓面積比值</td><td>方 ÷ 圓</td><td>' + fmt(as / ac, 3) + '</td></tr></tbody></table>' +
+        '<p class="note">數值來自你畫的圖形，圖寬 = 1000 單位。</p>';
+    }
+    if (id === 't4') {
+      if (S.bind.axis) return '<div class="status ok">對稱軸找到了。</div>';
+      var ls = S.objs.filter(function (o) { return (o.t === 'line' || o.t === 'bis') && G[o.id]; });
+      if (!ls.length) return ofType('seg').some(function (o) { return !o.own; }) ? '<div class="status">對稱軸要用直線：〔直線〕或〔線段中垂線〕。</div>' : '<div class="status">還沒有直線。</div>';
+      var best = Math.min.apply(null, ls.map(axisFit));
+      return '<div class="status">最接近的直線在頭頂或腳底處還偏離 ' + (isFinite(best) ? fmt(best) : '很多') + ' 單位（要在 ' + TOL.axis + ' 以內）。</div>';
+    }
+    if (id === 't5') {
+      var got = [];
+      if (S.bind.head) got.push('頭頂：點 ' + byId(S.bind.head).label);
+      if (S.bind.feet) got.push('腳底：點 ' + byId(S.bind.feet).label);
+      if (S.bind.head && S.bind.feet) return '<div class="status ok">' + got.join('，') + '。身高 c 約 ' + fmt(dist(G[S.bind.head], G[S.bind.feet])) + ' 單位。</div>';
+      return '<div class="status">' + (got.length ? got[0] + '。還缺' + (S.bind.head ? '腳底' : '頭頂') + '。' : '點要落在對稱軸上，靠近最高或最低處。') + '</div>';
+    }
+    if (id === 'q5') {
+      if (!S.ans.q5) return '';
+      m = bodyMeasure();
+      if (!m) return missing('需要圓心（當作肚臍）、頭頂與腳底。');
+      var r1 = m.b / m.a, r2 = m.c / m.b;
+      var big = Math.abs(r1 - r2) < 0.005 ? '一樣大' : r1 > r2 ? 'a 到 b' : 'b 到 c';
+      return verdict(S.ans.q5, big) +
+        '<table><tbody>' +
+        '<tr><td>a　頭頂到肚臍</td><td>' + fmt(m.a, 1) + '</td></tr>' +
+        '<tr><td>b　肚臍到腳底</td><td>' + fmt(m.b, 1) + '</td></tr>' +
+        '<tr><td>c　身高</td><td>' + fmt(m.c, 1) + '</td></tr>' +
+        '<tr><td>第 1 次放大 b ÷ a</td><td>' + fmt(r1, 3) + '</td></tr>' +
+        '<tr><td>第 2 次放大 c ÷ b</td><td>' + fmt(r2, 3) + '</td></tr>' +
+        '<tr class="total"><td>第 1 次 ÷ 第 2 次</td><td>' + fmt(r1 / r2, 3) + '</td></tr></tbody></table>' +
+        '<p class="note">肚臍取圓心在對稱軸上的位置。這個比較對肚臍位置很敏感，只差幾個單位，誰比較大就可能對調。</p>';
+    }
+    if (id === 'ch') {
+      m = bodyMeasure(chalT());
+      if (!m) return missing('需要頭頂與腳底。');
+      var c1 = m.b / m.a, c2 = m.c / m.b, same = Math.abs(c1 - c2) < 0.01;
+      var html = '<div class="status ' + (same ? 'ok' : '') + '">第 1 次 b ÷ a = ' + fmt(c1, 3) + '，第 2 次 c ÷ b = ' + fmt(c2, 3) + (same ? '，兩次相等了。' : '。') + '</div>';
+      html += '<p class="note">目前 b ÷ c = ' + fmt(m.b / m.c, 3) + '：肚臍到腳底佔身高的 ' + fmt(100 * m.b / m.c, 1) + '%。</p>';
+      if (S.chalReveal) {
+        var real = bodyMeasure();
+        var gold = (Math.sqrt(5) - 1) / 2;
+        html += '<div class="status ok">兩次相等時 b ÷ a = c ÷ b，也就是 b² = a × c。令 c = 1，a = 1 − b，得 b² + b − 1 = 0，所以 b = (√5 − 1) ÷ 2 ≈ 0.618。</div>' +
+          '<p>肚臍應該畫在距離腳底 0.618 c 的位置（圖上的金色記號），兩次放大比例都是 1.618。</p>';
+        if (real) html += '<p class="note">你的圓心對應 b ÷ c = ' + fmt(real.b / real.c, 3) + '，和 0.618 相差約 ' + fmt(Math.abs(real.b - gold * real.c)) + ' 單位。</p>';
+        html += '<p class="note">b² = a × c 正是「以 b 為邊的正方形」與「a × c 的矩形」面積相等，和「面積相等的 P 點」是同一個問題。</p>';
+      }
+      return html;
+    }
+    return '';
+  }
+  function chalT() {
+    if (S.chalT === null) { var m = bodyMeasure(); S.chalT = m ? m.t : 0.4; }
+    return S.chalT;
+  }
+
+  // ---------- Rendering ----------
+  function esc(s) { return String(s); }
+  function halfExtent() { return { w: W * view.upp / 2, h: H * view.upp / 2 }; }
+  function applyView() {
+    var e = halfExtent();
+    board.setAttribute('viewBox', (view.cx - e.w) + ' ' + (view.cy - e.h) + ' ' + (2 * e.w) + ' ' + (2 * e.h));
+  }
+  function ln(x1, y1, x2, y2, color, w, dash) {
+    return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" style="stroke:' + color + ';stroke-width:' + w + 'px;stroke-linecap:round' + (dash ? ';stroke-dasharray:' + dash : '') + '" vector-effect="non-scaling-stroke"/>';
+  }
+  function infinite(g, color, w, dash) {
+    var n = Math.hypot(g.dx, g.dy), ux = g.dx / n, uy = g.dy / n, E = 4000;
+    return ln(g.x - E * ux, g.y - E * uy, g.x + E * ux, g.y + E * uy, color, w, dash);
+  }
+  function tag(x, y, text, color, px, anchor) {
+    var u = view.upp;
+    return '<text x="' + x + '" y="' + y + '" text-anchor="' + (anchor || 'start') + '" style="font:600 ' + (px * u) + 'px var(--sans);fill:' + color + ';stroke:var(--draw-halo);stroke-width:' + (3 * u) + 'px;paint-order:stroke;stroke-linejoin:round">' + esc(text) + '</text>';
+  }
+  function dot(x, y, r, fill, stroke) {
+    var u = view.upp;
+    return '<circle cx="' + x + '" cy="' + y + '" r="' + r * u + '" style="fill:' + fill + ';stroke:' + (stroke || 'var(--draw-halo)') + ';stroke-width:' + 1.6 * u + 'px"/>';
+  }
+  function renderScene() {
+    var u = view.upp, out = '';
+    var pts = '', lines = '', fills = '', extras = '';
+    var special = {};
+    if (S.bind.center) special[S.bind.center] = '正方形的心';
+    if (S.bind.head) special[S.bind.head] = '頭頂';
+    if (S.bind.feet) special[S.bind.feet] = '腳底';
+    if (S.bind.circle) special[byId(S.bind.circle).c] = '圓心';
+
+    S.objs.forEach(function (o) {
+      var g = G[o.id];
+      if (!g) return;
+      var isSel = selected && (o.id === selected || (byId(selected) && byId(selected).own && o.id === byId(selected).own) || o.own === selected);
+      var isHot = hover === o.id || pending.indexOf(o.id) >= 0;
+      if (o.t === 'square') {
+        var bound = S.bind.square === o.id;
+        fills += '<polygon points="' + g.pts.map(function (p) { return p.x + ',' + p.y; }).join(' ') + '" style="fill:var(--draw-blue);fill-opacity:' + (bound ? .1 : .06) + ';stroke:none"/>';
+      } else if (o.t === 'circle') {
+        fills += '<circle cx="' + g.x + '" cy="' + g.y + '" r="' + g.r + '" style="fill:none;stroke:' + (isSel ? 'var(--draw-gold)' : 'var(--draw-red)') + ';stroke-width:' + (S.bind.circle === o.id ? 2.5 : 2) + 'px" vector-effect="non-scaling-stroke"/>';
+      } else if (isLine(o)) {
+        var col = isSel ? 'var(--draw-gold)' : o.t === 'seg' ? 'var(--draw-blue)' : 'var(--draw-teal)';
+        var w = isHot ? 4 : S.bind.axis === o.id ? 2.5 : 2;
+        if (o.t === 'seg') lines += ln(g.x, g.y, g.x + g.dx, g.y + g.dy, col, w);
+        else lines += infinite(g, col, w, o.t === 'bis' ? '8 5' : '');
+      } else if (isPoint(o)) {
+        var free = isDraggable(o), sp = special[o.id];
+        var fill = isSel ? 'var(--draw-gold)' : free ? 'var(--draw-blue)' : 'var(--draw-dark)';
+        var rad = (sp ? 7 : 5.5) + (hover === o.id ? 2 : 0);
+        if (pending.indexOf(o.id) >= 0) pts += '<circle cx="' + g.x + '" cy="' + g.y + '" r="' + 11 * u + '" style="fill:none;stroke:var(--draw-gold);stroke-width:' + 2.5 * u + 'px"/>';
+        pts += dot(g.x, g.y, rad, sp ? 'var(--draw-red)' : fill);
+        pts += tag(g.x + 9 * u, g.y - 9 * u, o.label + (sp ? ' ' + sp : ''), sp ? 'var(--draw-red)' : 'var(--draw-dark)', sp ? 14 : 13);
+      }
+    });
+
+    // Preview of the shape being constructed.
+    var pv = hoverWorld;
+    if (pv && pending.length === 1 && G[pending[0]] && isPoint(byId(pending[0]))) {
+      var a = G[pending[0]], snap = nearestPoint(pv, hoverR);
+      var b = snap ? G[snap.id] : pv, dashed = '6 5';
+      if (tool === 'seg' || tool === 'mid' || tool === 'bis') extras += ln(a.x, a.y, b.x, b.y, 'var(--draw-blue)', 1.5, dashed);
+      if (tool === 'line') extras += infinite({ x: a.x, y: a.y, dx: b.x - a.x || 1e-6, dy: b.y - a.y }, 'var(--draw-teal)', 1.5, dashed);
+      if (tool === 'circle') extras += '<circle cx="' + a.x + '" cy="' + a.y + '" r="' + dist(a, b) + '" style="fill:none;stroke:var(--draw-red);stroke-width:1.5px;stroke-dasharray:6 5" vector-effect="non-scaling-stroke"/>';
+      if (tool === 'square') {
+        var rx = -(b.y - a.y), ry = b.x - a.x;
+        extras += '<polygon points="' + [a.x, a.y, b.x, b.y, b.x + rx, b.y + ry, a.x + rx, a.y + ry].join(' ') + '" style="fill:var(--draw-blue);fill-opacity:.07;stroke:var(--draw-blue);stroke-width:1.5px;stroke-dasharray:6 5" vector-effect="non-scaling-stroke"/>';
+      }
+    }
+    if (pv && !nearestPoint(pv, hoverR) && (tool === 'point' || tool === 'seg' || tool === 'line' || tool === 'square' || tool === 'circle')) {
+      var sl = snapLine(pv, hoverR * 0.8), gp = pv;
+      if (sl) {
+        var gl = G[sl.id], k = ((pv.x - gl.x) * gl.dx + (pv.y - gl.y) * gl.dy) / (gl.dx * gl.dx + gl.dy * gl.dy);
+        gp = { x: gl.x + k * gl.dx, y: gl.y + k * gl.dy };
+      }
+      extras += '<circle cx="' + gp.x + '" cy="' + gp.y + '" r="' + 5 * u + '" style="fill:var(--draw-blue);fill-opacity:.45"/>';
+    }
+
+    // Body measures, shown only while they are the subject of the step.
+    var id = STEPS[S.step].id;
+    if (id === 'q5' || id === 'ch') {
+      var m = bodyMeasure(id === 'ch' ? chalT() : undefined);
+      if (m) {
+        var nx = (m.f.y - m.h.y) / m.c, ny = -(m.f.x - m.h.x) / m.c;
+        var off = 24 * u, off2 = 48 * u;
+        var A = function (p, d) { return { x: p.x - nx * d, y: p.y - ny * d }; };
+        var h1 = A(m.h, off), n1 = A(m.n, off), f1 = A(m.f, off), h2 = A(m.h, off2), f2 = A(m.f, off2);
+        extras += ln(h1.x, h1.y, n1.x, n1.y, 'var(--draw-red)', 4);
+        extras += ln(n1.x, n1.y, f1.x, f1.y, 'var(--draw-blue)', 4);
+        extras += ln(h2.x, h2.y, f2.x, f2.y, 'var(--draw-teal)', 4);
+        extras += tag((h1.x + n1.x) / 2 - 8 * u, (h1.y + n1.y) / 2, 'a', 'var(--draw-red)', 17, 'end');
+        extras += tag((n1.x + f1.x) / 2 - 8 * u, (n1.y + f1.y) / 2, 'b', 'var(--draw-blue)', 17, 'end');
+        extras += tag((h2.x + f2.x) / 2 - 8 * u, (h2.y + f2.y) / 2, 'c', 'var(--draw-teal)', 17, 'end');
+        if (id === 'ch' && S.chalReveal) {
+          var gold = 1 - (Math.sqrt(5) - 1) / 2;
+          var gp2 = { x: m.h.x + gold * (m.f.x - m.h.x), y: m.h.y + gold * (m.f.y - m.h.y) };
+          extras += '<path d="M' + gp2.x + ' ' + (gp2.y - 10 * u) + 'l' + 10 * u + ' ' + 10 * u + 'l' + (-10 * u) + ' ' + 10 * u + 'l' + (-10 * u) + ' ' + (-10 * u) + 'z" style="fill:var(--draw-gold);stroke:var(--draw-dark);stroke-width:' + u + 'px"/>';
+          extras += tag(gp2.x + 16 * u, gp2.y + 5 * u, '0.618 c', 'var(--draw-dark)', 13);
+        }
+        extras += dot(m.n.x, m.n.y, id === 'ch' ? 9 : 6.5, id === 'ch' ? 'var(--draw-gold)' : 'var(--draw-red)', 'var(--draw-dark)');
+        extras += tag(m.n.x + 14 * u, m.n.y - 10 * u, '肚臍', 'var(--draw-dark)', 14);
+      }
+    }
+
+    out = fills + lines + extras + pts;
+    $('scene').innerHTML = out;
+  }
+
+  function renderPrompt() {
+    var el = $('prompt');
+    if (alertMsg) { el.textContent = alertMsg; el.className = 'alert'; return; }
+    el.className = '';
+    var list = PROMPTS[tool];
+    el.textContent = list[Math.min(pending.length, list.length - 1)];
+  }
+  function renderTools() {
+    var html = TOOLS.map(function (t) {
+      return '<button type="button" class="tool" data-tool="' + t.id + '" aria-pressed="' + (tool === t.id) + '" title="' + t.tip + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + t.icon + '</svg>' + t.label + '</button>';
+    }).join('');
+    html += '<span class="sep"></span>' +
+      '<button type="button" class="tool" id="undoBtn">復原</button>' +
+      '<button type="button" class="tool" id="delBtn">刪除</button>' +
+      '<button type="button" class="tool" id="resetBtn">重新開始</button>';
+    $('tools').innerHTML = html;
+  }
+  function syncTools() {
+    document.querySelectorAll('[data-tool]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.tool === tool); });
+    $('undoBtn').disabled = !undoStack.length;
+    $('delBtn').disabled = !selected;
+    board.classList.toggle('move', tool === 'move');
+  }
+
+  var cardKey = '', liveCache = '';
+  function renderPanel() {
+    $('chips').innerHTML = STEPS.map(function (s, i) {
+      var cls = 'chip' + (i === S.step ? ' now' : stepDone(s.id) ? ' done' : '');
+      return '<button type="button" class="' + cls + '" data-step="' + i + '"' + (i > S.maxStep ? ' disabled' : '') + (i === S.step ? ' aria-current="step"' : '') + '>' + s.chip + '</button>';
+    }).join('');
+
+    var st = STEPS[S.step];
+    var key = st.id + '|' + (S.ans[st.id] || '') + '|' + S.chalReveal;
+    if (key !== cardKey) {
+      cardKey = key;
+      $('cardHead').innerHTML = '<p class="eyebrow">' + st.kind + '</p><h1>' + st.title + '</h1>';
+      var body = '';
+      if (st.hint) body += '<details><summary>需要提示</summary><p>' + st.hint + '</p></details>';
+      if (st.options) {
+        var locked = !st.right && !!S.ans[st.id];
+        body += '<div class="options">' + st.options.map(function (o) {
+          var cls = 'option', ans = S.ans[st.id];
+          if (ans === o) cls += st.right ? (o === st.right ? ' right' : ' wrong') : ' picked';
+          return '<button type="button" class="' + cls + '" data-answer="' + o + '"' + (locked ? ' disabled' : '') + '>' + o + '</button>';
+        }).join('') + '</div>';
+      }
+      if (st.id === 'ch') {
+        body += '<p>拖動圖上金色的肚臍，或用下面的滑桿，讓兩次放大比例相等。</p>' +
+          '<div class="slider"><label for="navel">肚臍在頭頂與腳底之間的位置</label>' +
+          '<input id="navel" type="range" min="0.1" max="0.9" step="0.001"></div>';
+        if (!S.chalReveal) body += '<button type="button" class="ghost-btn" id="reveal">看解答</button>';
+      }
+      $('cardBody').innerHTML = body;
+    }
+    var slider = $('navel');
+    if (slider && document.activeElement !== slider) slider.value = chalT();
+
+    var live = liveHtml(st.id);
+    if (live !== liveCache) { liveCache = live; $('live').innerHTML = live; }
+    var next = $('next');
+    next.hidden = !(stepDone(st.id) && S.step < STEPS.length - 1);
+    if (S.step === STEPS.length - 1) next.hidden = true;
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORE, JSON.stringify({
+        objs: S.objs, nextId: S.nextId, labelN: S.labelN, bind: S.bind, ans: S.ans,
+        step: S.step, maxStep: S.maxStep, chalT: S.chalT, chalReveal: S.chalReveal
+      }));
+    } catch (e) { /* the page works without storage */ }
+  }
+  function load() {
+    try {
+      var d = JSON.parse(localStorage.getItem(STORE));
+      if (d && d.objs) Object.keys(S).forEach(function (k) { if (d[k] !== undefined) S[k] = d[k]; });
+    } catch (e) { /* start fresh */ }
+  }
+
+  function update() {
+    solve();
+    checkTasks();
+    renderScene();
+    renderPrompt();
+    syncTools();
+    renderPanel();
+    save();
+  }
+  var redrawQueued = false;
+  function queueScene() {
+    if (redrawQueued) return;
+    redrawQueued = true;
+    requestAnimationFrame(function () { redrawQueued = false; renderScene(); });
+  }
+
+  // ---------- Pointer ----------
+  var pointers = new Map(), gesture = null, pinch = null, hoverWorld = null, hoverR = 12;
+  function toWorld(e) {
+    var r = board.getBoundingClientRect();
+    return { x: view.cx + (e.clientX - r.left - W / 2) * view.upp, y: view.cy + (e.clientY - r.top - H / 2) * view.upp };
+  }
+  function pickR(e) { return (e.pointerType === 'touch' ? 24 : 12) * view.upp; }
+  function clampView() {
+    view.upp = Math.max(0.08, Math.min(view.upp, 4));
+    view.cx = Math.max(-100, Math.min(SHEET.w + 100, view.cx));
+    view.cy = Math.max(-100, Math.min(SHEET.h + 100, view.cy));
+  }
+  function zoomAt(factor, clientX, clientY) {
+    var r = board.getBoundingClientRect();
+    var mx = clientX === undefined ? W / 2 : clientX - r.left, my = clientY === undefined ? H / 2 : clientY - r.top;
+    var wx = view.cx + (mx - W / 2) * view.upp, wy = view.cy + (my - H / 2) * view.upp;
+    view.upp *= factor;
+    clampView();
+    view.cx = wx - (mx - W / 2) * view.upp;
+    view.cy = wy - (my - H / 2) * view.upp;
+    clampView();
+    applyView();
+    renderScene();
+  }
+  function fitHome() {
+    view.cx = (HOME.x0 + HOME.x1) / 2;
+    view.cy = (HOME.y0 + HOME.y1) / 2;
+    view.upp = Math.max((HOME.x1 - HOME.x0) / W, (HOME.y1 - HOME.y0) / H);
+    applyView();
+    renderScene();
+  }
+  function dragTarget(p, r) {
+    if (STEPS[S.step].id === 'ch') {
+      var m = bodyMeasure(chalT());
+      if (m && dist(p, m.n) <= r * 1.2) return 'chal';
+    }
+    var best = null, bd = r;
+    S.objs.forEach(function (o) {
+      if (!isDraggable(o) || !G[o.id]) return;
+      var d = dist(p, G[o.id]);
+      if (d <= bd) { bd = d; best = o; }
+    });
+    return best;
+  }
+  function moveTarget(t, p) {
+    if (t === 'chal') {
+      var m = bodyMeasure(chalT());
+      if (!m) return;
+      S.chalT = Math.max(0.1, Math.min(0.9, ((p.x - m.h.x) * (m.f.x - m.h.x) + (p.y - m.h.y) * (m.f.y - m.h.y)) / (m.c * m.c)));
+      return;
+    }
+    if (t.t === 'point') { t.x = p.x; t.y = p.y; return; }
+    var g = G[t.l];
+    if (g) t.k = ((p.x - g.x) * g.dx + (p.y - g.y) * g.dy) / (g.dx * g.dx + g.dy * g.dy);
+  }
+  function hoverTarget(p, r) {
+    if (tool === 'inter') { var n = linesNear(p, r); return n[0] ? n[0].id : null; }
+    var pt = nearestPoint(p, r);
+    if (pt) return pt.id;
+    if (tool === 'mid' || tool === 'bis') { var s = linesNear(p, r).filter(function (o) { return o.t === 'seg'; })[0]; return s ? s.id : null; }
+    return null;
+  }
+
+  board.addEventListener('pointerdown', function (e) {
+    board.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) {
+      var a = Array.from(pointers.values());
+      pinch = { d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y), x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2 };
+      gesture = null;
+      return;
+    }
+    if (pointers.size > 2) return;
+    var p = toWorld(e), r = pickR(e);
+    gesture = {
+      sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY, p: p, r: r,
+      target: dragTarget(p, r), moved: false, thresh: e.pointerType === 'touch' ? 9 : 4
+    };
+  });
+  board.addEventListener('pointermove', function (e) {
+    if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && pointers.size >= 2) {
+      var a = Array.from(pointers.values());
+      var d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y), mx = (a[0].x + a[1].x) / 2, my = (a[0].y + a[1].y) / 2;
+      view.cx -= (mx - pinch.x) * view.upp;
+      view.cy -= (my - pinch.y) * view.upp;
+      if (d > 0) zoomAt(pinch.d / d, mx, my); else applyView();
+      pinch = { d: d, x: mx, y: my };
+      return;
+    }
+    if (gesture) {
+      if (!gesture.moved && Math.hypot(e.clientX - gesture.sx, e.clientY - gesture.sy) > gesture.thresh) {
+        gesture.moved = true;
+        if (gesture.target && gesture.target !== 'chal') pushUndo();
+        if (gesture.target) board.classList.add('drag');
+      }
+      if (gesture.moved) {
+        if (gesture.target) {
+          moveTarget(gesture.target, toWorld(e));
+          update();
+        } else {
+          view.cx -= (e.clientX - gesture.lx) * view.upp;
+          view.cy -= (e.clientY - gesture.ly) * view.upp;
+          clampView();
+          applyView();
+          renderScene();
+        }
+        gesture.lx = e.clientX; gesture.ly = e.clientY;
+      }
+      return;
+    }
+    if (e.pointerType === 'mouse' || pending.length) {
+      hoverWorld = tool === 'move' && !pending.length ? null : toWorld(e);
+      hoverR = pickR(e);
+      var p = toWorld(e);
+      var h = hoverTarget(p, hoverR);
+      hover = h;
+      queueScene();
+    }
+  });
+  function endPointer(e, cancelled) {
+    pointers.delete(e.pointerId);
+    if (pinch && pointers.size < 2) pinch = null;
+    if (!gesture) return;
+    var g = gesture;
+    gesture = null;
+    board.classList.remove('drag');
+    if (!cancelled && !g.moved) clickAt(g.p, g.r);
+    else if (g.target) update();
+  }
+  board.addEventListener('pointerup', function (e) { endPointer(e, false); });
+  board.addEventListener('pointercancel', function (e) { endPointer(e, true); });
+  board.addEventListener('pointerleave', function () { if (!gesture) { hoverWorld = null; hover = null; queueScene(); } });
+  board.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    zoomAt(Math.exp(e.deltaY * 0.0015), e.clientX, e.clientY);
+  }, { passive: false });
+
+  // ---------- Controls ----------
+  var resetArmed = null;
+  function resetAll() {
+    S.objs = []; S.nextId = 1; S.labelN = 0; S.bind = {}; S.ans = {};
+    S.step = 0; S.maxStep = 0; S.chalT = null; S.chalReveal = false;
+    undoStack = []; pending = []; selected = null; tool = 'move';
+    fitHome();
+    update();
+  }
+  $('tools').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.tool) {
+      tool = b.dataset.tool; pending = []; selected = null; alertMsg = '';
+      hoverWorld = null; hover = null;
+      update();
+      return;
+    }
+    if (b.id === 'undoBtn') undo();
+    if (b.id === 'delBtn' && selected) remove(selected);
+    if (b.id === 'resetBtn') {
+      if (resetArmed) {
+        clearTimeout(resetArmed); resetArmed = null;
+        b.textContent = '重新開始'; b.classList.remove('confirm');
+        resetAll();
+      } else {
+        b.textContent = '確定清除？'; b.classList.add('confirm');
+        resetArmed = setTimeout(function () { resetArmed = null; b.textContent = '重新開始'; b.classList.remove('confirm'); }, 3000);
+      }
+    }
+  });
+  $('chips').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-step]');
+    if (!b || b.disabled) return;
+    S.step = parseInt(b.dataset.step, 10);
+    update();
+  });
+  $('next').addEventListener('click', function () {
+    S.step = Math.min(S.step + 1, STEPS.length - 1);
+    S.maxStep = Math.max(S.maxStep, S.step);
+    update();
+  });
+  $('cardBody').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-answer]');
+    if (b && !b.disabled) { S.ans[STEPS[S.step].id] = b.dataset.answer; update(); }
+    if (e.target.id === 'reveal') { S.chalReveal = true; update(); }
+  });
+  $('cardBody').addEventListener('input', function (e) {
+    if (e.target.id === 'navel') { S.chalT = parseFloat(e.target.value); update(); }
+  });
+  $('zoomIn').addEventListener('click', function () { zoomAt(1 / 1.35); });
+  $('zoomOut').addEventListener('click', function () { zoomAt(1.35); });
+  $('zoomFit').addEventListener('click', fitHome);
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'Escape') { pending = []; selected = null; update(); }
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selected) { e.preventDefault(); remove(selected); }
+  });
+
+  // ---------- Boot ----------
+  function makeBoard() {
+    var img = document.createElementNS(NS, 'image');
+    img.setAttribute('href', 'vitruve.jpg');
+    img.setAttribute('x', 0); img.setAttribute('y', 0);
+    img.setAttribute('width', SHEET.w); img.setAttribute('height', SHEET.h);
+    img.setAttribute('preserveAspectRatio', 'none');
+    board.appendChild(img);
+    var g = document.createElementNS(NS, 'g');
+    g.id = 'scene';
+    g.setAttribute('pointer-events', 'none');
+    board.appendChild(g);
+  }
+  function measure() {
+    var r = board.getBoundingClientRect();
+    W = Math.max(r.width, 1); H = Math.max(r.height, 1);
+  }
+  makeBoard();
+  renderTools();
+  load();
+  measure();
+  fitHome();
+  update();
+  new ResizeObserver(function () {
+    var was = W;
+    measure();
+    if (Math.abs(was - W) > 40) fitHome();
+    else { applyView(); renderScene(); }
+  }).observe(board);
+})();
+</script>
+
+</body></html>
